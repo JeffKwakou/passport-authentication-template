@@ -1,8 +1,10 @@
 import { DataTypes } from "sequelize";
 import { databaseConfig } from "../database.config";
+import { Token } from "./Token.schema";
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -27,7 +29,11 @@ export const User = sequelize.define('User', {
     password: {
         type: new DataTypes.STRING,
         allowNull: false,
-    }
+    },
+    isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
 }, {
     tableName: "users",
     hooks: {
@@ -50,6 +56,13 @@ User.prototype.generateJWT = function () {
     }, process.env.JWT_SECRET);
 };
 
+User.prototype.generateVerificationToken = function () {
+    return Token.build({
+        userId: this.id,
+        token: crypto.randomBytes(20).toString('hex')
+    });
+};
+
 (async () => {
-    await sequelize.sync();
+    await sequelize.sync( { force: true } );
 })();
