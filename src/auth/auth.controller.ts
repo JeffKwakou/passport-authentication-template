@@ -92,6 +92,66 @@ export const verify = async (req: Request, res: Response) => {
 }
 
 /**
+ * @route POST api/auth/recover
+ * @desc Send email to recover password
+ * @access Public
+ */
+export const recoverPassword = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({where: {email: email}});
+
+        if (!user) return res.status(400).json({message: 'We were unable to find a user with that email.'});
+
+        const token = user.generateVerificationToken();
+
+        // Save the verification token
+        await token.save();
+
+        const subject = "Password change request";
+        const to = user.email;
+        const link=`http://${req.headers.host}/api/auth/reset-password/${token.token}`;
+        const html = `<p>Hi ${user.username}<p><br><p>Please click on the following <a href="${link}">link</a> to reset your password.</p>
+                  <br><p>If you did not request this, please ignore this email.</p>`;
+
+        await sendMail(to, subject, html);
+
+        res.status(200).json({message: 'A reset email has been sent to ' + user.email + '.'});
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+}
+
+/**
+ * @route POST api/auth/reset/:token
+ * @desc Reset password
+ * @access Public
+ */
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        const tokenObj = await Token.findOne({where: {token: token}});
+
+        if (!tokenObj) return res.status(400).json({message: 'We were unable to find a valid token. Your token my have expired.'});
+
+        const user = await User.findOne({where: {id: tokenObj.userId}});
+
+        if (!user) return res.status(400).json({message: 'We were unable to find a user for this token.'});
+
+        // Verify and save the user
+        user.password = password;
+        await user.save();
+
+        res.status(200).json({message: "The password has been changed."});
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+}
+
+/**
  * Send verification email
  * @param user 
  * @param req 
