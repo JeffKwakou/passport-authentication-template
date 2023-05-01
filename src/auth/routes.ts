@@ -1,7 +1,7 @@
 import express, { Request, Response} from 'express';
 import { check } from 'express-validator';
 import { validate } from '../middlewares/validate.middleware';
-import { login, recoverPassword, register, verify } from './auth.controller';
+import { login, recoverPassword, register, verify, resetView, resetPassword } from './auth.controller';
 import { authenticate } from '../middlewares/authenticate.middleware';
 
 const router = express.Router();
@@ -26,6 +26,12 @@ router.get('/verify/:token', verify);
 router.post('/recover', [
     check('email', 'Email is required').isEmail()
 ], recoverPassword);
+
+router.get('/reset/:token', resetView);
+
+router.post('/reset/:token', [
+    check('password', 'Password is required').isEmail()
+], resetPassword);
 
 router.get('/user', authenticate, (req: Request, res: Response) => {
     res.status(200).json(req.body.user)

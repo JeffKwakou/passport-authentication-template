@@ -28,18 +28,24 @@ export const User = sequelize.define('User', {
     },
     password: {
         type: new DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     isVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    googleId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
 }, {
     tableName: "users",
     hooks: {
         beforeCreate: async (user: any) => {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
+            if (user.password) {
+                const salt = await bcrypt.genSalt(10);
+                user.password = await bcrypt.hash(user.password, salt);
+            }
         }
     }
 });

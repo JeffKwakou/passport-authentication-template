@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { RequestWithUser } from "../models/request.interface";
 import { User } from "../models/User.schema";
 import { sendMail } from "../utils/send-mail";
 import { Token } from "../models/Token.schema";
@@ -53,6 +54,25 @@ export const login = async (req: Request, res: Response) => {
     
         const token = user.generateJWT();
     
+        res.status(200).json({ token });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @route GET api/auth/verify/:token
+ * @desc Google login
+ * @access Public
+ */
+export const googleLogin = async (req: RequestWithUser, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const token = req.user.generateJWT();
+
         res.status(200).json({ token });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -122,6 +142,30 @@ export const recoverPassword = async (req: Request, res: Response) => {
         res.status(500).json({message: error.message});
     }
 }
+
+/**
+ * @route GET api/auth/reset/:token
+ * @desc Reset password
+ * @access Public
+ */
+export const resetView = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.params;
+
+        const tokenObj = await Token.findOne({where: {token: token}});
+
+        if (!tokenObj) return res.status(400).json({message: 'We were unable to find a valid token. Your token my have expired.'});
+
+        const user = await User.findOne({where: {id: tokenObj.userId}});
+
+        if (!user) return res.status(400).json({message: 'We were unable to find a user for this token.'});
+
+        //Redirect user to form with the email address
+        res.render('reset', {user});
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+};
 
 /**
  * @route POST api/auth/reset/:token
