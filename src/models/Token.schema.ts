@@ -1,9 +1,24 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model, Optional } from "sequelize";
 import { databaseConfig } from "../database.config";
 
 const sequelize = databaseConfig;
 
-export const Token:any = sequelize.define('Token', {
+interface TokenAttributes {
+    id: number;
+    userId: number;
+    token: string;
+}
+
+interface TokenCreationAttributes extends Optional<TokenAttributes, 'id'> {
+    id?: number;
+}
+  
+export interface TokenInstance extends Model<TokenAttributes, TokenCreationAttributes>, TokenAttributes {
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export const Token = sequelize.define<TokenInstance>('Token', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -22,6 +37,6 @@ export const Token:any = sequelize.define('Token', {
     tableName: "tokens",
 });
 
-Token.associate = (models: any) => {
-    models.Token.belongsTo(models.User, { foreignKey: 'userId' });
-};
+// Token.associate = models => {
+//     Token.belongsTo(models.User, { foreignKey: 'userId' });
+// };

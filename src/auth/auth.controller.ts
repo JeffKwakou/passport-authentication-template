@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { RequestWithUser } from "../models/request.interface";
-import { User } from "../models/User.schema";
+import { User, UserInstance } from "../models/User.schema";
 import { sendMail } from "../utils/send-mail";
-import { Token } from "../models/Token.schema";
+import { Token, TokenInstance } from "../models/Token.schema";
 
 /**
  * @route POST api/auth/register
@@ -13,13 +13,13 @@ export const register = async (req: Request, res: Response) => {
     try {
         const { email, username, password } = req.body;
     
-        const userExists = await User.findOne({ where: { email } });
+        const userExists: UserInstance = await User.findOne({ where: { email } });
     
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
     
-        const user = await User.create({ email: email, username: username, password: password });
+        const user: UserInstance = await User.create({ email: email, username: username, password: password });
 
         sendVerificationEmail(user, req, res);
     } catch (error) {
@@ -36,13 +36,13 @@ export const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
     
-        const user = await User.findOne({ where: { email } });
+        const user: UserInstance = await User.findOne({ where: { email } });
     
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
     
-        const isMatch = await user.comparePassword(password);
+        const isMatch: boolean = await user.comparePassword(password);
     
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ type: 'not-verified', message: 'Your account has not been verified.' });
         }
     
-        const token = user.generateJWT();
+        const token: string = user.generateJWT();
     
         res.status(200).json({ token });
     } catch (error) {
@@ -71,7 +71,7 @@ export const googleLogin = async (req: RequestWithUser, res: Response) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const token = req.user.generateJWT();
+        const token: string = req.user.generateJWT();
 
         res.status(200).json({ token });
     } catch (error) {
@@ -89,12 +89,12 @@ export const verify = async (req: Request, res: Response) => {
 
     try {
         // Find a matching token
-        const token: any = await Token.findOne({where: {token: req.params.token}});
+        const token: TokenInstance = await Token.findOne({where: {token: req.params.token}});
 
         if (!token) return res.status(400).json({message: 'We were unable to find a valid token. Your token my have expired.'});
 
         // If we found a token, find a matching user
-        const user = await User.findOne({where: {id: token.userId}});
+        const user: UserInstance = await User.findOne({where: {id: token.userId}});
 
         if (!user) return res.status(400).json({message: 'We were unable to find a user for this token.'});
 
@@ -120,11 +120,11 @@ export const recoverPassword = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
 
-        const user = await User.findOne({where: {email: email}});
+        const user: UserInstance = await User.findOne({where: {email: email}});
 
         if (!user) return res.status(400).json({message: 'We were unable to find a user with that email.'});
 
-        const token = user.generateVerificationToken();
+        const token: TokenInstance = user.generateVerificationToken();
 
         // Save the verification token
         await token.save();
@@ -177,11 +177,11 @@ export const resetPassword = async (req: Request, res: Response) => {
         const { token } = req.params;
         const { password } = req.body;
 
-        const tokenObj = await Token.findOne({where: {token: token}});
+        const tokenObj: TokenInstance = await Token.findOne({where: {token: token}});
 
         if (!tokenObj) return res.status(400).json({message: 'We were unable to find a valid token. Your token my have expired.'});
 
-        const user = await User.findOne({where: {id: tokenObj.userId}});
+        const user: UserInstance = await User.findOne({where: {id: tokenObj.userId}});
 
         if (!user) return res.status(400).json({message: 'We were unable to find a user for this token.'});
 
@@ -201,9 +201,9 @@ export const resetPassword = async (req: Request, res: Response) => {
  * @param req 
  * @param res 
  */
-async function sendVerificationEmail(user, req: Request, res: Response) {
+async function sendVerificationEmail(user: UserInstance, req: Request, res: Response) {
     try{
-        const token = user.generateVerificationToken();
+        const token: TokenInstance = user.generateVerificationToken();
 
         // Save the verification token
         await token.save();

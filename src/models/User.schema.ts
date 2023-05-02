@@ -1,6 +1,6 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model, Optional } from "sequelize";
 import { databaseConfig } from "../database.config";
-import { Token } from "./Token.schema";
+import { Token, TokenInstance } from "./Token.schema";
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
@@ -10,7 +10,31 @@ dotenv.config();
 
 const sequelize = databaseConfig;
 
-export const User = sequelize.define('User', {
+interface UserAttributes {
+    id: number;
+    email: string;
+    username: string;
+    password?: string;
+    isVerified: boolean;
+    googleId?: string;
+}
+
+interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {
+    id?: number;
+}
+  
+export interface UserInstance extends Model<UserAttributes, UserCreationAttributes>, UserAttributes {
+    createdAt?: Date;
+    updatedAt?: Date;
+
+    comparePassword(password: string): Promise<boolean>;
+
+    generateJWT(): string;
+
+    generateVerificationToken(): TokenInstance;
+}
+
+export const User = sequelize.define<UserInstance>('User', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -41,7 +65,7 @@ export const User = sequelize.define('User', {
 }, {
     tableName: "users",
     hooks: {
-        beforeCreate: async (user: any) => {
+        beforeCreate: async (user: UserInstance) => {
             if (user.password) {
                 const salt = await bcrypt.genSalt(10);
                 user.password = await bcrypt.hash(user.password, salt);

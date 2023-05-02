@@ -1,5 +1,5 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
-import { User } from '../models/User.schema';
+import { User, UserInstance } from '../models/User.schema';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,13 +13,13 @@ export = passport => {
     },
     async (request, accessToken, refreshToken, profile, done) => {
         try {
-            const existingUser = await User.findOne({ where: {googleId: profile.id} });
+            const existingUser: UserInstance = await User.findOne({ where: {googleId: profile.id} });
             
             if (existingUser) {
                 return done(null, existingUser);
             }
             
-            const newUser = await User.create({
+            const newUser: UserInstance = await User.create({
                 googleId: profile.id,
                 username: profile.displayName,
                 email: profile.email,

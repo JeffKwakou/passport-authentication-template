@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {Application} from 'express';
 import passport from 'passport';
 import jwtMiddleware from './middlewares/jwt.middleware';
 import googleMiddleware from './middlewares/google.middleware';
@@ -8,7 +8,7 @@ import { googleLogin } from './auth/auth.controller';
 
 import { authRoutes } from './auth/routes';
 
-const app = express();
+const app: Application = express();
 const port = 3000;
 
 app.use(cors());
