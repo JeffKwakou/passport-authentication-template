@@ -41,17 +41,17 @@ export const User = sequelize.define<UserInstance>('User', {
         primaryKey: true,
     },
     email: {
-        type: new DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
     },
     username: {
-        type: new DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
     },
     password: {
-        type: new DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: true,
     },
     isVerified: {
@@ -92,6 +92,18 @@ User.prototype.generateVerificationToken = function () {
         token: crypto.randomBytes(20).toString('hex')
     });
 };
+
+User.hasMany(Token, {
+    onDelete: 'CASCADE',
+    sourceKey: 'id',
+    foreignKey: 'userId',
+    as: 'tokens'
+});
+
+Token.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'users'
+});
 
 (async () => {
     await sequelize.sync( { force: true } );

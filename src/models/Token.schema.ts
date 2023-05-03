@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { databaseConfig } from "../database.config";
+import { User } from "./User.schema";
 
 const sequelize = databaseConfig;
 
@@ -25,18 +26,18 @@ export const Token = sequelize.define<TokenInstance>('Token', {
         primaryKey: true,
     },
     userId: {
-        type: new DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
     },
     token: {
-        type: new DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
     }
 }, {
     tableName: "tokens",
 });
-
-// Token.associate = models => {
-//     Token.belongsTo(models.User, { foreignKey: 'userId' });
-// };
